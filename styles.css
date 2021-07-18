@@ -1,0 +1,57 @@
+.fbddl-row {
+  color: var(--primary-text);
+}
+
+button.fbddl-button {
+  background: var(--primary-button-background);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 7px 20px;
+  cursor: pointer;
+  border-radius: var(--button-corner-radius);
+  position: relative;
+}
+
+button.fbddl-button:hover {
+  filter: brightness(95%);
+}
+
+button.fbddl-button:active {
+  transform: scale(95%);
+}
+
+button.loading .fbddl-button-content {
+  visibility: hidden;
+  opacity: 0;
+}
+
+button.loading {
+  background: var(--secondary-button-background);
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  margin: auto;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border: 4px solid transparent;
+  border-top-color: var(--progress-ring-neutral-foreground);
+  border-radius: 50%;
+  animation: spinner 1s ease infinite;
+}
+
+@keyframes spinner {
+  from {
+    transform: rotate(0turn);
+  }
+  to {
+    transform: rotate(1turn);
+  }
+}

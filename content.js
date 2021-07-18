@@ -1,100 +1,216 @@
 let cToken;
-const infoTextId = "fbddl-info"
-const infoTextNumberId = "fbddl-infotext-num"
-const progressBarId = "fbddl-progress"
+const infoTextId = "fbddl-info";
+const infoTextNumberId = "fbddl-infotext-num";
+const progressBarId = "fbddl-progress";
 const infoContainerId ="fbddl-container";
 
-addDownloadButton();
+const buttonClass = "fbddl-button";
+const rowClass = "fbddl-row";
+const buttonContentClass = "fbddl-button-content";
+const contentId = "fbddl";
+const gatherButtonId = "fbddl-gather-button";
+const gatherTextId = "fbddl-gather-text";
+const gatherCountId = "fbddl-gather-count";
+const fromInputId = "fbddl-from";
+const toInputId = "fbddl-to";
+const downloadButtonId = "fbddl-download";
+const downloadRowId = "fbddl-download-row";
+const gatherIcon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23000000' x='0px' y='0px' viewBox='21.55 21.55 56.9 56.9'%3E%3Ctitle%3EArtboard 52%3C/title%3E%3Cg data-name='Layer 2'%3E%3Cpath d='M22.83,54.17h23v23l-9.38-9.38L25.79,78.45l-4.24-4.24L32.21,63.55Zm45-17.71L78.45,25.79l-4.24-4.24L63.55,32.21l-9.38-9.38v23h23Zm9.38,17.71h-23v23l9.38-9.38L74.21,78.45l4.24-4.24L67.79,63.55ZM25.79,21.55l-4.24,4.24L32.21,36.45l-9.38,9.38h23v-23l-9.38,9.38Z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E";
+const downloadIcon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' fill='%23000000' version='1.1' x='0px' y='0px' enable-background='new 0 0 20 20' xml:space='preserve' viewBox='1 0 18 20'%3E%3Cg%3E%3Cpolygon fill='%23000000' points='11,12.2 11,7 9,7 9,12.2 7.5,10.7 6,12.1 10,16 14,12.1 12.5,10.7 '%3E%3C/polygon%3E%3Cpath fill='%23000000' d='M13.4,0H1v20h18V5.6L13.4,0z M14,3.4L15.6,5H14V3.4z M3,18V2h9v5h5v11H3z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E";
+const loadingClass = "loading";
+const downloadMax = 800;
+
+let initialRequest;
+let gatheredDocuments = [];
+
+chrome.runtime.sendMessage({id:"loadCss"}, response => {
+	createContent();
+});
+
 // window.addEventListener ("load", addDownloadButton, false);
 
-function updateInfoTextNumber(newNumber) {
-	let number = document.querySelector("div#"+infoTextNumberId);
-	if (!number) {
-		createInfoText();
-		number = document.querySelector("div#"+infoTextNumberId);
-	}
-	number.textContent = newNumber;
-}
-
-function createInfoText() {
-	let tabLists = document.querySelectorAll("[role=tablist]");
-	let wideTabList = tabLists[1];
-	wideTabList = wideTabList.firstChild.lastChild;
-	let ele = document.createElement("a");
-	ele.id = infoContainerId;
-	ele.style.position = "relative";
-	ele.style.top = "30px";
-	ele.style.left = "10px";
-	ele.style.color = "black";
-	ele.style["text-decoration"] = "none";
-	let text = document.createElement("div")
-	text.style["font-size"] = "16px";
-	text.innerHTML = `Es wurden <div id=${infoTextNumberId} style="display:inline-block;">0</div> Dokumente geladen`;
-	text.id = infoTextId;
-	ele.appendChild(text);
-	wideTabList.appendChild(ele);
-	return text;
-}
-
-function createProgressBar() {
-	let container = document.querySelector("a#"+infoContainerId);
-	let max = document.querySelector("div#"+infoTextNumberId).textContent;
-	container.innerHTML = "";
-	container.style.top = "0px";
-	let progressBarContainer = document.createElement("div");
-	let progressBar = document.createElement("progress");
-	progressBar.max = max;
-	progressBar.value = 0;
-	progressBar.style.height = "60px";
-	progressBar.style.width = "300px";
-	progressBar.id = progressBarId;
-	progressBarContainer.appendChild(progressBar);
-	container.appendChild(progressBarContainer);
-	return progressBar;
-}
-
-function addDownloadButton() {
-	let all = document.querySelectorAll("[aria-label=Suchen]");
-	if (all.length < 3) {
-		// console.log("CANT FIND BUTTON PARENT YET, TRYING AGAIN IN 100MS")
-		setTimeout(addDownloadButton, 100);
+function createContent() {
+	let container = document.querySelector("div.dati1w0a.ihqw7lf3.hv4rvrfc.discj3wi");
+	if (!container) {
+		setTimeout(createContent, 100);
 		return;
 	}
-	for (const e of all) {		
-		let ele = e.parentElement;
-		let parent = ele.parentElement;
-		let dupe = ele.cloneNode(true);
-		let imgContainer = dupe.firstChild.firstChild;
-		imgContainer.innerHTML = "";
-		ele.parentElement.prepend(dupe);
-		// console.log(parent);
-		let img = document.createElement('img');
-		img.src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMjAgMjAiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDIwIDIwIiB4bWw6c3BhY2U9InByZXNlcnZlIj48Zz48cG9seWdvbiBmaWxsPSIjMDAwMDAwIiBwb2ludHM9IjExLDEyLjIgMTEsNyA5LDcgOSwxMi4yIDcuNSwxMC43IDYsMTIuMSAxMCwxNiAxNCwxMi4xIDEyLjUsMTAuNyAgIj48L3BvbHlnb24+PHBhdGggZmlsbD0iIzAwMDAwMCIgZD0iTTEzLjQsMEgxdjIwaDE4VjUuNkwxMy40LDB6IE0xNCwzLjRMMTUuNiw1SDE0VjMuNHogTTMsMThWMmg5djVoNXYxMUgzeiI+PC9wYXRoPjwvZz48L3N2Zz4";
-		img.style.maxHeight = "55%";
-		imgContainer.appendChild(img);
-		dupe.onclick = onButtonClicked;
-		console.log(ele);
-	}
+	let contentDiv =  document.createElement("div");
+	contentDiv.style.fontSize = "15px";
+	contentDiv.style.marginTop = "15px";
+	contentDiv.style.paddingTop = "7px";
+	contentDiv.style.marginTop = "15px";
+	contentDiv.style.borderTop = "1px solid var(--divider)";
+	// contentDiv.style.display = "flex";
+	// contentDiv.style.justifyContent = "flex-end";
+	let gatherRow = createRow();
+	let gatherText =  document.createElement("div");
+	gatherText.id = gatherTextId;
+	let gatherCountElement =  document.createElement("span");
+	gatherCountElement.id = gatherCountId;
+	gatherCountElement.innerText = "0";
+	let gatherTextLabel = createLabel("Gesammelte Dokumente: ");
+	gatherText.style.visibility = "hidden";
+	gatherText.appendChild(gatherTextLabel);
+	gatherText.appendChild(gatherCountElement);
+	gatherRow.appendChild(gatherText);
+	gatherRow.appendChild(createButton(gatherButtonId, gatherIcon, "Dokumente sammeln", onGatherButtonClicked));
+	
+	let downloadRow = createRow(downloadRowId);
+	let minMaxContainer = document.createElement("span");
+	minMaxContainer.appendChild(createLabel("Von: "));
+	let fromInput = createInput(fromInputId);
+	fromInput.addEventListener("input", () => {
+		let toInput = document.querySelector("input#"+toInputId);
+		to = parseInt(toInput.value);
+		fromInput.value = fromInput.value > to ? to : fromInput.value;
+		updateDownloadButton();
+	});
+	minMaxContainer.appendChild(fromInput);
+	minMaxContainer.appendChild(createLabel("Nach: "));
+	let toInput = createInput(toInputId);
+	toInput.addEventListener("input", () => {
+		let gatherCount = gatheredDocuments.length;
+		toInput.value = toInput.value > gatherCount ? gatherCount : toInput.value;
+		fromInput.value = fromInput.value <= toInput.value ? fromInput.value : toInput.value;
+		updateDownloadButton();
+	});
+	minMaxContainer.appendChild(toInput);
+	
+	downloadRow.style.display = "none";
+	downloadRow.appendChild(minMaxContainer);
+	downloadRow.appendChild(createButton(downloadButtonId, downloadIcon, "Dokumente herunterladen", onDownloadButtonClicked));
 
+	contentDiv.appendChild(gatherRow);
+	contentDiv.appendChild(downloadRow);
+
+	container.insertBefore(contentDiv, container.children[1]);
+	// updateGatherCount(999);
+	updateDownloadButton();
 }
 
-async function onButtonClicked() {
-	chrome.runtime.sendMessage({ id: "downloadButtonClicked" }, async request => {
+function updateDownloadButton() {
+	let text = document.querySelector("button#"+downloadButtonId).firstChild.lastChild;
+	text.innerText = getDownloadCount() +" Dokumente herunterladen";
+	resizeButtons();
+}
+
+function resizeButtons() {
+	let buttons = document.querySelectorAll("button."+buttonClass);
+	let max = 0;
+	for (const button of buttons) {
+		if (button.offsetWidth > max) {
+			max = button.offsetWidth;
+		}
+	}
+	for (const button of buttons) {
+		button.style.minWidth = max + "px";
+	}
+}
+
+function getDownloadCount() {
+	return document.querySelector("input#"+toInputId).value - document.querySelector("input#"+fromInputId).value + 1;
+}
+
+function updateGatherCount() {
+	let count = gatheredDocuments.length;
+	document.querySelector("span#"+gatherCountId).innerText = count;
+	// document.querySelector("input#"+toInputId).max = count;
+}
+
+function createInput(id) {
+	input = document.createElement("input");
+	input.value = 1;
+	input.id = id;
+	input.type = "number";
+	input.min = "1"
+	input.style.fontSize = "14px";
+	input.style.border = "none";
+	input.style.borderBottom = "2px solid black";
+	input.style.width = "3ch";
+	input.addEventListener("input", resizeInput);
+	resizeInput.call(input);
+	// input.addEventListener('focusin', (event) => {
+	// 	let element = event.target;
+	// 	let width = parseInt(element.style.width.replace("ch","")) + 6;
+	// 	console.log("width",width);
+	// 	element.style.width = width + "ch";
+	//   });
+	return input;
+}
+
+function resizeInput() {
+	let charCount = this.value.length > 0 ? this.value.length : 3;
+	this.style.width = charCount + 3 + "ch";
+}
+
+function createLabel(text) {
+	let label =  document.createElement("span");
+	label.innerText = text;
+	label.style.fontWeight = "bold";
+	return label;
+}
+
+function createRow(id = null) {
+	let content = document.createElement("div");
+	content.id = id;
+	content.className = rowClass;
+	content.style.display = "flex";
+	content.style.justifyContent = "space-between";
+	content.style.alignItems = "center";
+	content.style.marginTop = "5px";
+	return content;
+}
+
+function createButton(id, icon, text, onClick) {
+	let button = document.createElement("button");
+	button.id = id;
+	button.className = buttonClass;
+    let content = document.createElement("div")
+	content.className = buttonContentClass;
+	content.style.display = "flex";
+	content.style.justifyContent = "center";
+	content.style.alignItems = "center";
+	content.style.transition = "all 0.5s;";
+	let iconElement = document.createElement("img");
+	iconElement.src = icon;
+	iconElement.style.filter = "invert(1)";
+	iconElement.style.marginRight = "3px";
+	iconElement.style.height = "16px";
+	let textElement = document.createElement("span");
+	textElement.style.marginBottom = "2px";
+	textElement.innerText = text;
+	content.appendChild(iconElement);
+	content.appendChild(textElement);
+	button.appendChild(content);
+	button.onclick = onClick;
+	return button;
+}
+
+async function onGatherButtonClicked() {
+	if (this.classList.contains("loadingClass")) {
+		return;
+	}
+
+	document.querySelector("div#"+gatherTextId).style.visibility = "visible";
+
+	this.classList.add(loadingClass);
+	chrome.runtime.sendMessage({ id: "getRequest" }, async request => {
 		if (request) {
-			let documents = [];
-			count = 1;
+			initialRequest = request;
+			gatheredDocuments = [];
 			for await (let doc of loadDocuments(request)) {
-				// console.log(count++);
-				updateInfoTextNumber(count++);
-				documents.push(doc);
+				gatheredDocuments.push(doc);
+				updateGatherCount();
 			}
-			console.log(documents);
-			let progressBar = createProgressBar();
-			count = 1;
-			for (const doc of documents) {
-				downloadDocument(doc, request.headers);
-				progressBar.value = count++;
-			}
+			console.log(gatheredDocuments);
+
+			this.classList.remove(loadingClass);
+			document.querySelector("div#"+downloadRowId).style.display = "flex";
+			resizeButtons();
+			let toInput = document.querySelector("input#"+toInputId);
+			toInput.value = gatheredDocuments.length >= downloadMax ? downloadMax : gatheredDocuments.length;
+			updateDownloadButton();
 		}
 		else {
 			console.log("INITIAL GRAPH REQUEST NOT YET RECORDED!!");
@@ -102,22 +218,29 @@ async function onButtonClicked() {
 	});
 }
 
-async function downloadDocument(document, headers) {
+async function onDownloadButtonClicked() {
+	let from = document.querySelector("input#"+fromInputId).value;
+	let to = document.querySelector("input#"+toInputId).value;
+	for (const doc of gatheredDocuments.slice(from-1, to)) {
+		downloadDocument(doc);
+	}
+}
+
+async function downloadDocument(document) {
 	if (document.type != documentType.facebookDocument) {
 		chrome.runtime.sendMessage({ id: "download", document: document }, response => {
 		});
 		return;
 	}
-	console.log("TYPE IS FB DOC")
 	let response;
 	if (cToken == null) {
-		response = await fetch(document.url, {headers: headers});
+		response = await fetch(document.url, {headers: initialRequest.headers});
 		const content = await response.text();
 		const regex = /\"compat_iframe_token\":\"(\S*)\"/g;
 		cToken = regex.exec(content)[1];
 	}
 	const url = `${document.url}?cquick=jsc_c_m&cquick_token=${cToken}&ctarget=https%3A%2F%2Fwww.facebook.com`;
-	response =  await fetch(url, {headers: headers});
+	response =  await fetch(url, {headers: initialRequest.headers});
 	const documentHtml = await response.text();
 	
 	// let blob = new Blob([documentHtml], {type: "text/plain"});
@@ -203,7 +326,7 @@ function* createFacebookDocuments(data) {
 
 //https://stackoverflow.com/a/55292366
 function trim(str, ch) {
-    var start = 0, 
+    let start = 0, 
         end = str.length;
 
     while(start < end && str[start] === ch)

@@ -3,7 +3,7 @@ let count = 0;
 
 chrome.runtime.onMessage.addListener(
   function (message, sender, sendResponse) {
-    if (message.id === "downloadButtonClicked") {
+    if (message.id === "getRequest") {
       chrome.storage.local.get("initialRequest", response => {
         console.log("INITIAL REQUEST:",response.initialRequest);
         if (!response.initialRequest) {
@@ -42,6 +42,15 @@ chrome.runtime.onMessage.addListener(
           filename: fileName,
         });
       });
+    }
+    else if (message.id === "loadCss") {
+      chrome.scripting.insertCSS({
+        target: {tabId: sender.tab.id},
+        files: ["styles.css"]
+      }, () => {
+        sendResponse(null);
+      });
+      return true;
     }
 });
 

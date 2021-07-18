@@ -11,12 +11,19 @@
   "background": {
     "service_worker": "loader.js"
   },
-  "permissions": ["webRequest", "tabs", "downloads", "storage"],
+  "permissions": ["webRequest", "tabs", "downloads", "storage", "scripting"],
   "host_permissions": ["*://www.facebook.com/groups/*/files*"],
   "content_scripts": [
     {
       "matches": ["*://www.facebook.com/groups/*/files*"],
+      "css": ["styles.css"],
       "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["styles.css"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
