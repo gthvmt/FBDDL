@@ -1,6 +1,6 @@
 {
   "name": "Facebook Document Downloader",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "manifest_version": 3,
   "description": "This extension makes it possible to download all documents of a facebook group",
   "icons": {
@@ -12,12 +12,15 @@
     "service_worker": "loader.js"
   },
   "permissions": ["webRequest", "tabs", "downloads", "storage", "scripting"],
-  "host_permissions": ["*://www.facebook.com/groups/*/files*"],
+  "host_permissions": [
+    "*://www.facebook.com/groups/*/files*",
+    "*://lookaside.fbsbx.com/file/*"
+  ],
   "content_scripts": [
     {
       "matches": ["*://www.facebook.com/groups/*/files*"],
       "css": ["styles.css"],
-      "js": ["content.js"]
+      "js": ["zip.min.js", "FileSaver.min.js", "content.js"]
     }
   ],
   "web_accessible_resources": [

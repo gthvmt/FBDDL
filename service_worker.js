@@ -1,6 +1,5 @@
 let graphRequests = []
-let count = 0;
-
+// chrome.storage.local.clear()
 chrome.runtime.onMessage.addListener(
   function (message, sender, sendResponse) {
     if (message.id === "getRequest") {
@@ -18,16 +17,10 @@ chrome.runtime.onMessage.addListener(
       sendResponse(null);
       let html = message.html;
 
-      if (!count) {
-        count = 0;
-      }
-      count++;
-
       if (!html) {
         chrome.downloads.download({
           url: message.document.url,
         });
-        count++;
         return;
       }
       
@@ -35,14 +28,23 @@ chrome.runtime.onMessage.addListener(
 		  let blob = new Blob([html], {type: "text/html"});
 
       let fileName = coerceFileName(message.document.name, "_") + ".html";
-      
-      blobToBase64(blob, data => {
+        
+        blobToBase64(blob, data => {
         chrome.downloads.download({
           url: data,
           filename: fileName,
+        }, callback => {
+          let error = chrome.runtime.lastError;
+          if(error) {
+            chrome.tabs.sendMessage(sender.tab.id, {id:"downloadFailed", document:message.document});
+            chrome.downloads.download({
+              url: data,
+              filename: document.id+".html",
+            });
+          }
+        })
         });
-      });
-    }
+      }
     else if (message.id === "loadCss") {
       chrome.scripting.insertCSS({
         target: {tabId: sender.tab.id},
@@ -50,6 +52,10 @@ chrome.runtime.onMessage.addListener(
       }, () => {
         sendResponse(null);
       });
+      return true;
+    }
+    else if (message.id === "getBlobUrl") {
+      fetch(message.url).then(res => res.blob()).then(blob => blobToBase64(blob, b64 => sendResponse(b64)));
       return true;
     }
 });
@@ -64,10 +70,11 @@ function blobToBase64(blob, callback) {
 }
 
 function coerceFileName(fileName, illegalCharacterReplacement) {
-  fileName = fileName.replace(/(<|>|:|"|\/|\\|\||\?|\*)/g, illegalCharacterReplacement);
   if (fileName == "") {
     return "_";
   }
+  fileName = fileName.replace(/(<|>|:|"|\/|\\|\||\?|\*)/g, illegalCharacterReplacement);
+  fileName = fileName.replace(/(?:\r\n|\r|\n)/g, ' ');
   return fileName;
 }
 
@@ -99,10 +106,11 @@ function onSendHeaders(details) {
       request.headers[element.name] = element.value;
     });
   }
-  if (request.headers["X-FB-Friendly-Name"] == "GroupsCometFilesTabPaginationQuery") {
+  // if (request.headers["X-FB-Friendly-Name"] == "GroupsCometFilesTabPaginationQuery") {
+
     console.log("SAVED INITIAL REQUEST");
     chrome.storage.local.set({initialRequest:request});
     chrome.webRequest.onSendHeaders.removeListener(onBeforeRequest);
     chrome.webRequest.onSendHeaders.removeListener(onSendHeaders);
-  }
+  
 }
